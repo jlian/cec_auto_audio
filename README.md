@@ -16,9 +16,9 @@ When you turn on a console connected via HDMI-CEC, your TV switches inputs autom
 
 ## Requirements
 
+- A Raspberry Pi (or some other CEC-capable device) connected to your AVR or TV with HDMI (USB-HDMI adaptors won't work) on the CEC-enabled port (usually 0)
 - Python 3.6+
 - `cec-client` from libCEC: `sudo apt-get install cec-utils`
-- CEC-capable TV, AVR, and a device with CEC adapter (e.g., Raspberry Pi)
 
 ## Installation
 
@@ -50,9 +50,24 @@ Run the script:
 
 The script monitors CEC traffic and automatically sends System Audio Mode Request (`tx 15:70:00:00`) when needed.
 
+You can temporarily set `DRY_RUN = True` while sniffing behavior; you’ll see log lines like:
+
+```text
+[AUTO 00:18:19] Playback/console at logical B became Active Source (phys 36:00).
+[AUTO 00:18:20] [DRY RUN] Would send: tx 15:70:00:00
+```
+
+Once you’re happy, flip `DRY_RUN = False`.
+
 ### Running as a systemd service
 
-Create `/etc/systemd/system/cec-auto-audio.service`:
+On the device, create a service file:
+
+```bash
+sudo nano /etc/systemd/system/cec-auto-audio.service
+```
+
+Example unit:
 
 ```ini
 [Unit]
@@ -73,11 +88,18 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
-Enable and start:
+Then:
+
 ```bash
+sudo systemctl daemon-reload
 sudo systemctl enable cec-auto-audio.service
 sudo systemctl start cec-auto-audio.service
+
+# Tail logs
+journalctl -u cec-auto-audio.service -f
 ```
+
+Because we print both our own `[INFO]` / `[AUTO]` lines and the raw `cec-client` output, the journal doubles as a trace buffer. `journald` handles rotation automatically; you don’t need to babysit log files.
 
 ## How it works
 
