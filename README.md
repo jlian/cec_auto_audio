@@ -56,14 +56,18 @@ Create `/etc/systemd/system/cec-auto-audio.service`:
 
 ```ini
 [Unit]
-Description=CEC Auto Audio Helper
+Description=CEC auto audio helper (Denon + consoles)
 After=network.target
 
 [Service]
 Type=simple
-User=pi
-ExecStart=/usr/bin/python3 /home/pi/cec_auto_audio/cec_auto_audio.py
+ExecStart=/usr/bin/python3 /opt/cec-auto-audio/cec_auto_audio.py
 Restart=on-failure
+User=pi
+Group=pi
+WorkingDirectory=/opt/cec-auto-audio
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
